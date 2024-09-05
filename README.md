@@ -21,6 +21,7 @@ Le projet Inception est une mise en pratique des concepts de conteneurisation à
 - **Sécurité et Performance :** Application des meilleures pratiques en matière de sécurité (TLSv1.2/1.3) et optimisation des performances avec des versions stables d'Alpine ou Debian.
 
 ## Technologies Utilisées :
+![Docker](https://avatars.githubusercontent.com/u/7739233?s=200&v=4)
 Docker : Création et gestion des conteneurs, rédaction de Dockerfiles.
 Docker Compose : Orchestration des conteneurs et gestion des services.
 NGINX : Configuration de serveur web avec support TLS.
