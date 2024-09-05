@@ -1,0 +1,86 @@
+version: '3.3'
+services:
+
+  mariadb:
+      image: mariadb:inception
+      build: requirements/mariadb/
+      container_name: mariadb
+      environment:
+        - "MYSQL_PASSWORD=${MYSQL_PASSWORD}"
+        - "MYSQL_USER=${MYSQL_USER}"
+        - "MYSQL_DATABASE=${MYSQL_DATABASE}"
+        - "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+      expose:
+        - "3306"
+      networks:
+        - inception_network
+      volumes:
+        - db-data1:/var/lib/mysql
+      restart: unless-stopped
+      healthcheck:
+        test: mysqladmin ping --host=localhost -p${MYSQL_ROOT_PASSWORD}
+        interval: 5s
+        timeout: 1s
+        retries: 20
+        start_period: 5s
+    
+  wordpress:
+    image: wordpress:inception
+    build: requirements/wordpress/
+    container_name: wordpress
+    env_file: .env
+    networks:
+      - inception_network
+    volumes:
+      - html-data:/var/www/html/wordpress
+    expose:
+      - "9000"
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy 
+
+  nginx:
+      image: nginx:inception
+      build: requirements/nginx/
+      container_name: nginx
+      env_file: .env
+      depends_on:
+        - wordpress
+      volumes:
+        - html-data:/var/www/html/wordpress
+        - logs-data:/var/log/nginx/
+      ports:
+        - "443:443"
+      networks:
+        - inception_network
+      healthcheck:
+        test: 'curl -kfsSL https://localhost:443/status'
+        interval: 5s
+        timeout: 1s
+        retries: 10
+        start_period: 5s
+
+volumes:
+  db-data1:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: "${DATA_FOLDER}/mariadb"
+  html-data:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: "${DATA_FOLDER}/wordpress"
+  logs-data:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: "${DATA_FOLDER}/logs"
+      
+networks:
+  inception_network:
+    driver: bridge
